@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Admin\Role;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -58,4 +59,30 @@ class User extends Authenticatable
     protected $appends = [
         'profile_photo_url',
     ];
+
+    public function getIsAdminAttribute()
+    {
+        return $this->roles()->where('id', 1)->exists();
+    }
+
+    public function roles()
+    {
+        // return $this->belongsToMany(Role::class)->withTimestamps();
+        return $this->belongsToMany(Role::class);
+    }
+
+    public function assignRole($role)
+    {
+        if (is_string($role)) {
+            // Need to change title column to name for this to work
+            // $role = Role::whereName($role)->firstOrFail();
+        }
+
+        $this->roles()->save($role);
+    }
+
+    public function permissions()
+    {
+        return $this->roles->map->permissions->flatten()->pluck('title')->unique();
+    }
 }
